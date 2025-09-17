@@ -7,6 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 
 class Notification extends Model
 {
-    /** @use HasFactory<\Database\Factories\NotificationFactory> */
     use HasFactory;
+
+    protected $table = 'notifications';
+    protected $fillable = [
+        'user_id',
+        'message',
+        'type',
+        'status',
+        'data'
+    ];
+
+    protected $casts = [
+        'data' => 'array'
+    ];
+
+    public function user()
+    { 
+        return $this->belongsTo(User::class); 
+    }
+
 }
