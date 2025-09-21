@@ -13,13 +13,13 @@ class CheckRoleMiddleware
      *Usage in routes: ->middleware('role:admin') or ->middleware('role:instructor,admin')
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, ...$roles): Response
     {
         $user = $request->user();
 
         if (!$user) {
             // not authenticated
-            abort(403, 'Unauthorized');
+            abort(403, 'Unauthorized- not authenticated');
         }
 
         // If roles list empty, deny

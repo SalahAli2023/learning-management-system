@@ -13,7 +13,7 @@ class CoursePolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -21,7 +21,9 @@ class CoursePolicy
      */
     public function view(User $user, Course $course): bool
     {
-        return false;
+        return $user->role === 'admin' || 
+                $course->instructor_id === $user->id ||
+                $course->enrollments()->where('student_id', $user->id)->exists();
     }
 
     /**
@@ -29,7 +31,7 @@ class CoursePolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return in_array($user->role, ['admin','instructor']);
     }
 
     /**
@@ -37,7 +39,7 @@ class CoursePolicy
      */
     public function update(User $user, Course $course): bool
     {
-        return false;
+        return $user->role === 'admin' || $course->instructor_id === $user->id;
     }
 
     /**
@@ -45,7 +47,7 @@ class CoursePolicy
      */
     public function delete(User $user, Course $course): bool
     {
-        return false;
+        return $this->update($user, $course);
     }
 
     /**
@@ -53,7 +55,7 @@ class CoursePolicy
      */
     public function restore(User $user, Course $course): bool
     {
-        return false;
+        // return false;
     }
 
     /**
@@ -61,6 +63,6 @@ class CoursePolicy
      */
     public function forceDelete(User $user, Course $course): bool
     {
-        return false;
+        // return false;
     }
 }
