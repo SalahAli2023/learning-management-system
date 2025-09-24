@@ -33,11 +33,12 @@
                    maxlength="255"
                    required
                    @input="updateTitleStats"
-                   class="w-full px-4 py-3 border-2 border-border rounded-xl bg-bg text-text focus:border-blue-500 focus:ring focus:ring-blue-300"/>
+                   class="w-full px-4 py-3 border-2 border-border rounded-xl bg-bg text-text focus:border-blue-500"/>
             <div class="flex justify-between mt-1 text-xs opacity-75">
               <span>Keep it clear and descriptive</span>
               <span>{{ form.title.length }}/255</span>
             </div>
+            <p v-if="errors.title" class="text-red-500 text-sm mt-1">{{ errors.title[0] }}</p>
           </div>
 
           <!-- Category -->
@@ -48,6 +49,7 @@
                    placeholder="Science, Design, Programming..."
                    required
                    class="w-full px-4 py-3 border-2 border-border rounded-xl bg-bg text-text focus:border-green-500"/>
+            <p v-if="errors.category" class="text-red-500 text-sm mt-1">{{ errors.category[0] }}</p>
           </div>
 
           <!-- Description -->
@@ -142,6 +144,7 @@ const form = reactive({
   is_published: props.course.is_published ? '1' : '0'
 })
 
+const errors = reactive({})
 const isSubmitting = ref(false)
 const wordCount = ref(0)
 const characterCount = ref(0)
@@ -150,7 +153,6 @@ const readingTime = ref(0)
 const toast = useToast()
 
 const updateTitleStats = () => {}
-
 const updateDescriptionStats = () => {
   const text = form.description
   characterCount.value = text.length
@@ -165,11 +167,9 @@ const generatePlaceholderImage = () => {
 }
 
 const submitForm = async () => {
-  if (!form.title || !form.category) {
-    toast.error('Title and Category are required.', { timeout: 4000 })
-    return
-  }
   isSubmitting.value = true
+  Object.keys(errors).forEach(key => errors[key] = null)
+
   try {
     const { data } = await axios.put(props.updateRoute, form, {
       headers: { 'X-CSRF-TOKEN': props.csrfToken }
@@ -180,8 +180,13 @@ const submitForm = async () => {
       setTimeout(() => { window.location.href = props.indexRoute }, 1200)
     }
   } catch (err) {
-    console.error(err.response?.data || err)
-    toast.error('Failed to update course. Try again.', { timeout: 4000 })
+    if (err.response?.status === 422) {
+      Object.assign(errors, err.response.data.errors)
+      toast.error('Please fix the validation errors.', { timeout: 4000 })
+    } else {
+      console.error(err.response?.data || err)
+      toast.error('Failed to update course. Try again.', { timeout: 4000 })
+    }
   } finally {
     isSubmitting.value = false
   }
