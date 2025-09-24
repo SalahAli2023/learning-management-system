@@ -46,13 +46,14 @@ class CourseController extends Controller
      */
     public function store(StoreCourseRequest $request)
     {
-        Course::create([
-            'instructor_id' => auth()->id(),
-            ...$request->validated(),
-        ]);
+        
+        $course = $request->user()->courses()->create($request->validated());
 
-        return redirect()->route('instructor.courses.index')
-                        ->with('success', 'Course created successfully.');
+        return response()->json([
+            'success' => true,
+            'course'  => $course,
+            'csrfToken' => csrf_token(),
+        ]);
     }
 
     /**
@@ -61,6 +62,7 @@ class CourseController extends Controller
     public function show(Course $course)
     {
         $this->authorize('view',$course);
+
         return view('instructor.courses.show', compact('course'));
     }
 
@@ -81,20 +83,24 @@ class CourseController extends Controller
     {
         $course->update($request->validated());
 
-        return redirect()->route('instructor.courses.index')
-            ->with('success', 'Course updated successfully.');
+        return response()->json([
+            'success' => true,
+            'course'  => $course
+        ]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Course $course)
     {
+        //Policy  
         $this->authorize('delete', $course);
-
+        
         $course->delete();
 
-        return redirect()->route('instructor.courses.index')
-            ->with('success', 'Course deleted successfully.');
+        return response()->json([
+            'success' => true,
+        ]);
     }
 }
