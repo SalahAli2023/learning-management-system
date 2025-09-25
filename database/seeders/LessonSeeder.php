@@ -21,5 +21,20 @@ class LessonSeeder extends Seeder
                 'course_id' => $course->id
             ]);
         }
+        
+         // Create regular lessons
+        Lesson::factory()->count(50)->create();
+        
+        // Create free lessons
+        Lesson::factory()->count(10)->free()->create();
+        
+        // Create short lessons
+        Lesson::factory()->count(5)->short()->create();
+        
+        // Create long lessons
+        Lesson::factory()->count(5)->long()->create();
+        
+        // Create lessons without files
+        Lesson::factory()->count(3)->withoutFile()->create();
     }
 }
