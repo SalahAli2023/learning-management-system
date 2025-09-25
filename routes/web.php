@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Instructor\CourseController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -21,16 +22,43 @@ Route::middleware('auth')->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
-    // Instructor-only routes
-    Route::get('/instructor/courses', function () {
-        return view('dashboard');
-    })->middleware('role:instructor')->name('dashboard');
-
-
     // Admin-only routes
     Route::get('admin/users', function () { 
         return view('dashboard');
     })->middleware('role:admin')->name('dashboard');
+});
+
+Route::middleware(['auth','role:instructor,admin'])->prefix('instructor')
+    ->name('instructor.')->group(function () {
+        Route::resource('courses', CourseController::class);
+         //  routes for restore 
+        Route::post('courses/{course}/restore', [CourseController::class, 'restore'])
+            ->name('courses.restore');
+            
+        Route::delete('courses/{course}/force', [CourseController::class, 'forceDelete'])
+            ->name('courses.forceDelete');
+    });
+
+Route::get('/test-auth', function () {
+    $user = auth()->user();
+    dd([
+        'user_id' => $user->id,
+        'user_role' => $user->role,
+        'user_email' => $user->email,
+        'can_create_course' => Gate::allows('create', App\Models\Course::class),
+        'auth_check' => auth()->check()
+    ]);
+});
+
+Route::get('/test-policy', function () {
+    $user = auth()->user();
+    $policy = app()->make(App\Policies\CoursePolicy::class);
+    
+    dd([
+        'user_role' => $user->role,
+        'policy_result' => $policy->create($user),
+        'gate_result' => Gate::allows('create', App\Models\Course::class)
+    ]);
 });
 
 require __DIR__.'/auth.php';
