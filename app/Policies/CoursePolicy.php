@@ -55,7 +55,8 @@ class CoursePolicy
      */
     public function restore(User $user, Course $course): bool
     {
-        // return false;
+        return in_array($user->role, ['admin','instructor']);
+
     }
 
     /**
@@ -63,6 +64,6 @@ class CoursePolicy
      */
     public function forceDelete(User $user, Course $course): bool
     {
-        // return false;
+        return in_array($user->role, ['admin','instructor']);
     }
 }
