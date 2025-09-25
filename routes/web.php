@@ -31,6 +31,12 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth','role:instructor,admin'])->prefix('instructor')
     ->name('instructor.')->group(function () {
         Route::resource('courses', CourseController::class);
+         //  routes for restore 
+        Route::post('courses/{course}/restore', [CourseController::class, 'restore'])
+            ->name('courses.restore');
+            
+        Route::delete('courses/{course}/force', [CourseController::class, 'forceDelete'])
+            ->name('courses.forceDelete');
     });
 
 Route::get('/test-auth', function () {

@@ -26,7 +26,8 @@ class CourseController extends Controller
     {
         $this->authorize('viewAny', Course::class);
 
-        $courses = Course::paginate(10);
+        // $courses = Course::paginate(10);
+        $courses = Course::whereNull('deleted_at')->paginate(10);
 
         return view('instructor.courses.index', compact('courses'));
     }
@@ -90,17 +91,40 @@ class CourseController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * soft delete the specified resource from storage.
      */
     public function destroy(Course $course)
     {
         //Policy  
         $this->authorize('delete', $course);
         
-        $course->delete();
+        $course->update(['deleted_at' => now()]);
 
-        return response()->json([
-            'success' => true,
-        ]);
+        return response()->json(['success' => true]);
+
+    }
+
+    /**
+     * restore the specified deleted item resource from storage.
+     */
+    public function restore($id)
+    {
+        $course = Course::withTrashed()->findOrFail($id);
+
+        $course->update(['deleted_at' => null]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * force delete the specified resource from storage.
+     */
+    public function forceDelete($id)
+    {
+        $course = Course::withTrashed()->findOrFail($id);
+        
+        $course->forceDelete();
+
+        return response()->json(['success' => true]);
     }
 }
