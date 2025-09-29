@@ -70,7 +70,7 @@
             <!-- Action Buttons -->
             <div class="flex flex-col sm:flex-row lg:flex-col gap-3">
               <a 
-                :href="editRoute(course)" 
+                :href="editRoute" 
                 class="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold"
               >
                 <i class="fas fa-edit"></i>
@@ -110,7 +110,7 @@
           <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
             <i class="fas fa-users text-purple-500 text-xl"></i>
           </div>
-          <div class="text-2xl font-bold text-purple-600">{{ course.enrollments_count || 0 }}</div>
+          <div class="text-2xl font-bold text-purple-600">{{ course.enrollments.length || 0 }}</div>
           <div class="text-sm text-gray-600 dark:text-gray-400">Enrolled</div>
         </div>
 
@@ -118,7 +118,7 @@
           <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
             <i class="fas fa-chart-line text-orange-500 text-xl"></i>
           </div>
-          <div class="text-2xl font-bold text-orange-600">{{ course.lessons_count || 0 }}</div>
+          <div class="text-2xl font-bold text-orange-600">{{ course.lessons.length|| 0 }}</div>
           <div class="text-sm text-gray-600 dark:text-gray-400">Lessons</div>
         </div>
       </div>
@@ -287,9 +287,9 @@ export default {
       if (!name) return '??'
       return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
     },
-    editRoute(course) {
-      return `/instructor/courses/${course.id}/edit`;
-    },
+    // editRoute(course) {
+    //   return `/instructor/courses/${course.id}/edit`;
+    // },
   }
 }
 </script>

@@ -63,6 +63,13 @@ class CourseController extends Controller
     public function show(Course $course)
     {
         $this->authorize('view',$course);
+        $course->load([
+            'lessons' => function ($query) {
+                $query->where('deleted_at', null)->orderBy('created_at', 'desc');
+            },
+            'enrollments.student', // عشان يجيب الطلاب
+            'instructor'
+        ]);
 
         return view('instructor.courses.show', compact('course'));
     }

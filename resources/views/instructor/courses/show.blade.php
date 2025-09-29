@@ -1,8 +1,7 @@
 <x-app-layout>
-    <div id="app">
         <courses-show 
             :course='@json($course)' 
             index-route="{{ route('instructor.courses.index') }}"
+            edit-route="{{ route('instructor.courses.edit', $course->id) }}"
         ></courses-show>
-    </div>
 </x-app-layout>
