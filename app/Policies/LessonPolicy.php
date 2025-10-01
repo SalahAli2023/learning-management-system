@@ -25,7 +25,7 @@ class LessonPolicy
         }
 
         // Student enrolled in the course can view lessons
-        return $course->students()->where('user_id', $user->id)->exists();
+        return $course->students()->where('student_id', $user->id)->exists();
     }
 
     /**
@@ -39,13 +39,8 @@ class LessonPolicy
         }
 
         // Admin can view
-        if ($user->role === 'admin') {
+        if ($user->role === 'admin'|| $lesson->course->enrollments()->where('student_id', $user->id)->exists()) {
             return true;
-        }
-
-        // Student enrolled in the course can view if lesson is free or they have access
-        if ($lesson->course->students()->where('user_id', $user->id)->exists()) {
-            return $lesson->is_free || $this->hasAccessToPremiumContent($user, $lesson->course);
         }
 
         return false;
@@ -96,18 +91,5 @@ class LessonPolicy
         if ($user->role === 'admin') {
             return true;
         }
-    }
-
-    /**
-     * Check if user has access to premium content
-     */
-    private function hasAccessToPremiumContent(User $user, Course $course): bool
-    {
-        // Implement your logic for premium content access
-        // This could check subscriptions, payments, etc.
-        return $course->students()
-            ->where('user_id', $user->id)
-            ->where('has_access', true)
-            ->exists();
     }
 }
