@@ -75,6 +75,11 @@ class LessonController extends Controller
     {
         $this->authorize('view', $lesson);
 
+        // Load course with lessons for navigation
+        $course->load(['lessons' => function($query) {
+            $query->whereNull('deleted_at')->orderBy('order');
+        }]);
+
         return view('instructor.lessons.show', compact('course', 'lesson'));
     }
 
