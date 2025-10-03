@@ -47,7 +47,7 @@
               </div>
 
               <!-- Enrollment Status Messages -->
-              <div v-if="isEnrolled && enrollmentStatus === 'active'" 
+              <div v-if="props.isEnrolled && enrollmentStatus === 'active'" 
                    class="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200">
                 <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
                   <i class="fas fa-check text-white text-lg"></i>
@@ -60,7 +60,7 @@
                 </div>
               </div>
 
-              <div v-else-if="isEnrolled && enrollmentStatus === 'pending'" 
+              <div v-else-if="props.isEnrolled && enrollmentStatus === 'pending'" 
                    class="flex items-center gap-3 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200">
                 <div class="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center">
                   <i class="fas fa-clock text-white text-lg"></i>
@@ -73,7 +73,7 @@
                 </div>
               </div>
 
-              <div v-else-if="!isEnrolled && !course.is_free" 
+              <div v-else-if="!props.isEnrolled && !course.is_free" 
                    class="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200">
                 <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
                   <i class="fas fa-lock text-white text-lg"></i>
@@ -90,7 +90,7 @@
             <!-- Action Buttons -->
             <div class="flex flex-col gap-3">
               <!-- Enroll Button (for non-enrolled students) -->
-              <button v-if="!isEnrolled" 
+              <button v-if="!props.isEnrolled" 
                       @click="enrollCourse"
                       class="px-8 py-4 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 font-semibold text-lg flex items-center gap-3 group">
                 <i class="fas fa-user-plus group-hover:scale-110 transition-transform"></i>
@@ -98,7 +98,7 @@
               </button>
               
               <!-- Progress Button (for enrolled students) -->
-              <a v-if="isEnrolled && enrollmentStatus === 'active'" 
+              <a v-if="props.isEnrolled && enrollmentStatus === 'active'" 
                  :href="progressRoute"
                  class="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-semibold text-lg flex items-center gap-3 group text-center">
                 <i class="fas fa-chart-line group-hover:scale-110 transition-transform"></i>
@@ -106,7 +106,7 @@
               </a>
               
               <!-- Start Learning Button (for enrolled students only) -->
-              <button v-if="isEnrolled && enrollmentStatus === 'active'" 
+              <button v-if="props.isEnrolled && enrollmentStatus === 'active'" 
                       @click="startLearning"
                       class="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-semibold text-lg flex items-center gap-3 group">
                 <i class="fas fa-play-circle group-hover:scale-110 transition-transform"></i>
@@ -114,7 +114,7 @@
               </button>
 
               <!-- Contact Admin Button (for pending enrollment) -->
-              <button v-if="isEnrolled && enrollmentStatus === 'pending'" 
+              <button v-if="props.isEnrolled && enrollmentStatus === 'pending'" 
                       class="px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-xl shadow-lg font-semibold text-lg flex items-center gap-3 opacity-80 cursor-not-allowed">
                 <i class="fas fa-clock"></i>
                 Pending Approval
@@ -218,23 +218,90 @@
             
             <div class="divide-y divide-border">
               <div v-for="assignment in course.assignments" :key="assignment.id" 
-                   class="p-6 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200">
-                <h3 class="font-semibold text-lg mb-2 flex items-center gap-2">
-                  <i class="fas fa-file-alt text-green-500"></i>
-                  {{ assignment.title }}
-                </h3>
-                <p class="text-gray-600 dark:text-gray-400 text-sm mb-3 ml-7">
-                  {{ assignment.description }}
-                </p>
-                <div class="flex items-center justify-between text-xs text-gray-500 ml-7">
-                  <span class="flex items-center gap-1">
-                    <i class="fas fa-calendar"></i>
-                    Due: {{ formatDate(assignment.due_date) }}
-                  </span>
-                  <button class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition text-xs flex items-center gap-1">
-                    <i class="fas fa-paper-plane"></i>
-                    Submit
-                  </button>
+                  class="p-6 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <h3 class="font-semibold text-lg mb-2 flex items-center gap-2">
+                      <i class="fas fa-file-alt text-green-500"></i>
+                      {{ assignment.title }}
+                      <!-- Assignment Status Badge -->
+                      <span v-if="getAssignmentStatus(assignment)" 
+                            :class="getAssignmentStatusClass(assignment)" 
+                            class="text-xs font-semibold ml-2">
+                        <i :class="getAssignmentStatusIcon(assignment)" class="mr-1"></i>
+                        {{ getAssignmentStatus(assignment) }}
+                      </span>
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm mb-3">
+                      {{ assignment.description }}
+                    </p>
+                    <div class="flex items-center gap-4 text-xs text-gray-500">
+                      <span class="flex items-center gap-1">
+                        <i class="fas fa-calendar" :class="getDueDateClass(assignment)"></i>
+                        Due: {{ formatDate(assignment.due_date) }}
+                      </span>
+                      <span v-if="isAssignmentOverdue(assignment)" class="text-red-500 font-semibold flex items-center gap-1">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Overdue
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div class="flex gap-2 ml-4">
+                    <!-- Submit Button - Only show if student is enrolled -->
+                    <button v-if="isEnrolled && enrollmentStatus === 'active'" 
+                            @click="submitAssignment(assignment)"
+                            :class="[
+                              'px-4 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center gap-2 font-semibold text-sm',
+                              hasStudentSubmission(assignment)
+                                ? 'bg-blue-500 text-white hover:bg-blue-600'
+                                : 'bg-green-500 text-white hover:bg-green-600'
+                            ]">
+                      <i :class="hasStudentSubmission(assignment) ? 'fas fa-redo' : 'fas fa-paper-plane'"></i>
+                      {{ hasStudentSubmission(assignment) ? 'Resubmit' : 'Submit' }}
+                    </button>
+
+                    <!-- View Submission Button -->
+                    <button v-if="isEnrolled && enrollmentStatus === 'active' && hasStudentSubmission(assignment)" 
+                            @click="viewSubmission(assignment)"
+                            class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-all duration-300 transform hover:scale-105 flex items-center gap-2 text-sm">
+                      <i class="fas fa-eye"></i>
+                      View
+                    </button>
+
+                    <!-- Locked for non-enrolled students -->
+                    <div v-if="!isEnrolled || enrollmentStatus !== 'active'" 
+                        class="px-4 py-2 bg-gray-300 text-gray-600 rounded-lg text-sm cursor-not-allowed flex items-center gap-2">
+                      <i class="fas fa-lock"></i>
+                      Enroll to Submit
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Submission Status -->
+                <div v-if="isEnrolled && enrollmentStatus === 'active' && hasStudentSubmission(assignment)" 
+                    class="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                      <span class="text-sm font-semibold" :class="getSubmissionStatusClass(assignment)">
+                        <i :class="getSubmissionStatusIcon(assignment)" class="mr-1"></i>
+                        {{ getSubmissionStatusText(assignment) }}
+                      </span>
+                      <span class="text-xs text-gray-500">
+                        Submitted: {{ getSubmissionDate(assignment) }}
+                      </span>
+                      <span v-if="getSubmissionGrade(assignment)" 
+                            class="text-sm font-bold text-green-500">
+                        Grade: {{ getSubmissionGrade(assignment) }}/100
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <!-- Feedback Preview -->
+                  <div v-if="getSubmissionFeedback(assignment)" 
+                      class="mt-2 text-xs text-gray-600 bg-white dark:bg-gray-700 p-2 rounded">
+                    <strong>Feedback:</strong> {{ truncateText(getSubmissionFeedback(assignment), 80) }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -468,7 +535,115 @@ const viewLesson = (lesson) => {
     toast.error('You need to enroll in the course to access this lesson.')
   }
 }
+// Methods الجديدة لإدارة الـ Assignments
+const hasStudentSubmission = (assignment) => {
+  return assignment.submissions && assignment.submissions.length > 0;
+}
 
+const getAssignmentStatus = (assignment) => {
+  if (!props.isEnrolled || enrollmentStatus.value !== 'active') return null;
+  
+  if (hasStudentSubmission(assignment)) {
+    const submission = assignment.submissions[0];
+    return submission.grade !== null ? 'Graded' : 'Submitted';
+  }
+  
+  if (isAssignmentOverdue(assignment)) return 'Overdue';
+  return 'Pending';
+}
+
+const getAssignmentStatusClass = (assignment) => {
+  const status = getAssignmentStatus(assignment);
+  const classMap = {
+    'Graded': 'px-2 py-1 bg-green-100 text-green-600 rounded-full',
+    'Submitted': 'px-2 py-1 bg-blue-100 text-blue-600 rounded-full',
+    'Overdue': 'px-2 py-1 bg-red-100 text-red-600 rounded-full',
+    'Pending': 'px-2 py-1 bg-yellow-100 text-yellow-600 rounded-full'
+  };
+  return classMap[status] || 'px-2 py-1 bg-gray-100 text-gray-600 rounded-full';
+}
+
+const getAssignmentStatusIcon = (assignment) => {
+  const status = getAssignmentStatus(assignment);
+  const iconMap = {
+    'Graded': 'fas fa-check-circle',
+    'Submitted': 'fas fa-paper-plane',
+    'Overdue': 'fas fa-exclamation-triangle',
+    'Pending': 'fas fa-clock'
+  };
+  return iconMap[status] || 'fas fa-question-circle';
+}
+
+const isAssignmentOverdue = (assignment) => {
+  if (!assignment.due_date) return false;
+  return new Date(assignment.due_date) < new Date() && !hasStudentSubmission(assignment);
+}
+
+const getDueDateClass = (assignment) => {
+  if (!assignment.due_date) return 'text-gray-500';
+  
+  const dueDate = new Date(assignment.due_date);
+  const now = new Date();
+  
+  if (dueDate < now) return 'text-red-500';
+  if (dueDate < new Date(now.getTime() + 24 * 60 * 60 * 1000)) return 'text-orange-500';
+  return 'text-green-500';
+}
+
+const getSubmissionStatusText = (assignment) => {
+  if (!hasStudentSubmission(assignment)) return '';
+  const submission = assignment.submissions[0];
+  return submission.grade !== null ? 'Graded' : 'Under Review';
+}
+
+const getSubmissionStatusClass = (assignment) => {
+  if (!hasStudentSubmission(assignment)) return '';
+  const submission = assignment.submissions[0];
+  return submission.grade !== null ? 'text-green-500' : 'text-blue-500';
+}
+
+const getSubmissionStatusIcon = (assignment) => {
+  if (!hasStudentSubmission(assignment)) return '';
+  const submission = assignment.submissions[0];
+  return submission.grade !== null ? 'fas fa-check-circle' : 'fas fa-clock';
+}
+
+const getSubmissionDate = (assignment) => {
+  if (!hasStudentSubmission(assignment)) return '';
+  return new Date(assignment.submissions[0].created_at).toLocaleDateString();
+}
+
+const getSubmissionGrade = (assignment) => {
+  if (!hasStudentSubmission(assignment)) return null;
+  return assignment.submissions[0].grade;
+}
+
+const getSubmissionFeedback = (assignment) => {
+  if (!hasStudentSubmission(assignment)) return null;
+  return assignment.submissions[0].feedback;
+}
+
+const submitAssignment = (assignment) => {
+  if (!props.isEnrolled || enrollmentStatus.value !== 'active') {
+    toast.error('You need to be enrolled in the course to submit assignments.');
+    return;
+  }
+  
+  // Redirect to assignment submission page
+  window.location.href = `/student/courses/${props.course.id}/assignments/${assignment.id}`;
+}
+
+const viewSubmission = (assignment) => {
+  if (!hasStudentSubmission(assignment)) return;
+  
+  // Redirect to submission details page
+  window.location.href = `/student/courses/${props.course.id}/assignments/${assignment.id}/submissions/${assignment.submissions[0].id}`;
+}
+
+const truncateText = (text, length) => {
+  if (!text) return '';
+  return text.length > length ? text.substring(0, length) + '...' : text;
+}
 onMounted(() => {
   console.log('Course loaded:', props.course.title)
 })

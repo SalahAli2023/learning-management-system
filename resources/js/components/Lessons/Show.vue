@@ -12,27 +12,6 @@
         <span class="text-blue-500 font-medium">{{ lesson.title }}</span>
       </nav>
 
-      <!-- Access Control -->
-      <div v-if="!hasAccess" class="mb-6">
-        <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-2xl p-6">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center">
-              <i class="fas fa-lock text-white text-xl"></i>
-            </div>
-            <div class="flex-1">
-              <h3 class="font-semibold text-yellow-800 dark:text-yellow-300">Premium Content</h3>
-              <p class="text-yellow-700 dark:text-yellow-400 text-sm mt-1">
-                This lesson is part of our premium content. Enroll in the course to access all premium lessons.
-              </p>
-            </div>
-            <a :href="enrollRoute" 
-               class="px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all">
-              Enroll Now
-            </a>
-          </div>
-        </div>
-      </div>
-
       <!-- Lesson Header -->
       <div class="bg-card border border-border rounded-2xl shadow-xl overflow-hidden mb-6">
         <div class="p-8">
@@ -64,7 +43,7 @@
             </div>
             
             <!-- Instructor Actions -->
-            <div v-if="isInstructor" class="flex gap-3">
+            <div class="flex gap-3">
               <a :href="editRoute" 
                  class="px-6 py-3 bg-green-500 text-white rounded-xl shadow hover:shadow-lg transition-all flex items-center gap-2">
                 <i class="fas fa-edit"></i>
@@ -81,7 +60,7 @@
       </div>
 
       <!-- Video Player Section -->
-      <div v-if="hasAccess && isVideoFile" class="mb-6">
+      <div v-if="isVideoFile" class="mb-6">
         <div class="bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
           <div class="p-6 border-b border-border">
             <h2 class="text-xl font-semibold flex items-center gap-2">
@@ -95,9 +74,7 @@
                 ref="videoPlayer"
                 :src="lesson.file_url"
                 controls
-                controlsList="nodownload"
                 class="w-full h-full object-cover"
-                @contextmenu="preventRightClick"
               >
                 Your browser does not support the video tag.
               </video>
@@ -116,36 +93,19 @@
                   <i :class="isMuted ? 'fas fa-volume-mute' : 'fas fa-volume-up'"></i>
                   {{ isMuted ? 'Unmute' : 'Mute' }}
                 </button>
-              </div>
-              
-              <div class="flex gap-3">
                 <button @click="downloadFile" 
-                        v-if="lesson.is_free"
                         class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all flex items-center gap-2">
                   <i class="fas fa-download"></i>
                   Download Video
                 </button>
-                <span v-else class="px-4 py-2 bg-purple-500 text-white rounded-lg flex items-center gap-2">
-                  <i class="fas fa-crown"></i>
-                  Download available for enrolled students
+              </div>
+              
+              <!-- Instructor Preview Info -->
+              <div class="bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-lg border border-blue-200">
+                <span class="text-blue-700 dark:text-blue-300 text-sm font-semibold">
+                  <i class="fas fa-eye mr-1"></i>
+                  Instructor Preview Mode
                 </span>
-              </div>
-            </div>
-            
-            <!-- Progress Tracking -->
-            <div v-if="isStudent" class="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-semibold">Your Progress</span>
-                <span class="text-sm text-gray-500">{{ progressPercentage }}%</span>
-              </div>
-              <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div class="bg-green-500 h-2 rounded-full transition-all duration-300" 
-                     :style="{ width: progressPercentage + '%' }"></div>
-              </div>
-              <div class="mt-2 flex justify-between text-xs text-gray-500">
-                <span>Started</span>
-                <span v-if="progressPercentage === 100" class="text-green-500 font-semibold">Completed!</span>
-                <span v-else>In Progress</span>
               </div>
             </div>
           </div>
@@ -153,7 +113,7 @@
       </div>
 
       <!-- Document Viewer -->
-      <div v-else-if="hasAccess && isDocumentFile" class="mb-6">
+      <div v-else-if="isDocumentFile" class="mb-6">
         <div class="bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
           <div class="p-6 border-b border-border">
             <h2 class="text-xl font-semibold flex items-center gap-2">
@@ -177,13 +137,30 @@
                   View Document
                 </a>
                 <button @click="downloadFile" 
-                        v-if="lesson.is_free"
                         class="px-6 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-all flex items-center gap-2">
                   <i class="fas fa-download"></i>
                   Download
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- No File Message -->
+      <div v-else class="mb-6">
+        <div class="bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
+          <div class="p-6 text-center">
+            <div class="w-16 h-16 bg-gray-400 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <i class="fas fa-file text-white text-xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">No File Attached</h3>
+            <p class="text-gray-500 mb-4">This lesson doesn't have any content file yet.</p>
+            <a :href="editRoute" 
+               class="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all flex items-center gap-2 inline-flex">
+              <i class="fas fa-plus"></i>
+              Add Content File
+            </a>
           </div>
         </div>
       </div>
@@ -222,7 +199,7 @@
       </div>
 
       <!-- Navigation -->
-      <div v-if="hasAccess" class="mt-8 flex justify-between">
+      <div class="mt-8 flex justify-between">
         <button @click="previousLesson" 
                 v-if="hasPreviousLesson"
                 class="px-6 py-3 border-2 border-border text-text rounded-xl hover:border-blue-500 hover:text-blue-600 transition-all flex items-center gap-2">
@@ -247,19 +224,6 @@ const props = defineProps({
   lesson: Object,
   indexRoute: String,
   editRoute: String,
-  enrollRoute: String,
-  isInstructor: {
-    type: Boolean,
-    default: false
-  },
-  isStudent: {
-    type: Boolean,
-    default: false
-  },
-  hasAccess: {
-    type: Boolean,
-    default: false
-  },
   courseLessons: {
     type: Array,
     default: () => []
@@ -274,7 +238,6 @@ const props = defineProps({
 const videoPlayer = ref(null)
 const isPlaying = ref(false)
 const isMuted = ref(false)
-const progressPercentage = ref(0)
 
 // Computed properties
 const isVideoFile = computed(() => {
@@ -346,10 +309,6 @@ const toggleMute = () => {
   isMuted.value = videoPlayer.value.muted
 }
 
-const preventRightClick = (event) => {
-  event.preventDefault()
-}
-
 const downloadFile = () => {
   if (!props.lesson.file_url) return
   
@@ -366,7 +325,7 @@ const previousLesson = () => {
   const currentIndex = props.courseLessons.findIndex(lesson => lesson.id === props.currentLessonId)
   if (currentIndex > 0) {
     const prevLesson = props.courseLessons[currentIndex - 1]
-    window.location.href = `/courses/${prevLesson.course_id}/lessons/${prevLesson.id}`
+    window.location.href = `/instructor/courses/${prevLesson.course_id}/lessons/${prevLesson.id}`
   }
 }
 
@@ -374,42 +333,31 @@ const nextLesson = () => {
   const currentIndex = props.courseLessons.findIndex(lesson => lesson.id === props.currentLessonId)
   if (currentIndex < props.courseLessons.length - 1) {
     const nextLesson = props.courseLessons[currentIndex + 1]
-    window.location.href = `/courses/${nextLesson.course_id}/lessons/${nextLesson.id}`
+    window.location.href = `/instructor/courses/${nextLesson.course_id}/lessons/${nextLesson.id}`
   }
 }
 
 // Video event listeners
-const handleTimeUpdate = () => {
-  if (!videoPlayer.value) return
-  
-  const duration = videoPlayer.value.duration
-  const currentTime = videoPlayer.value.currentTime
-  
-  if (duration > 0) {
-    progressPercentage.value = Math.round((currentTime / duration) * 100)
-    
-    // Auto-mark as completed when 90% watched
-    if (progressPercentage.value >= 90 && props.isStudent) {
-      // Here you would typically send an API request to mark as completed
-      console.log('Lesson completed!')
-    }
-  }
+const handlePlay = () => {
+  isPlaying.value = true
+}
+
+const handlePause = () => {
+  isPlaying.value = false
 }
 
 // Lifecycle
 onMounted(() => {
   if (videoPlayer.value) {
-    videoPlayer.value.addEventListener('timeupdate', handleTimeUpdate)
-    videoPlayer.value.addEventListener('play', () => isPlaying.value = true)
-    videoPlayer.value.addEventListener('pause', () => isPlaying.value = false)
+    videoPlayer.value.addEventListener('play', handlePlay)
+    videoPlayer.value.addEventListener('pause', handlePause)
   }
 })
 
 onUnmounted(() => {
   if (videoPlayer.value) {
-    videoPlayer.value.removeEventListener('timeupdate', handleTimeUpdate)
-    videoPlayer.value.removeEventListener('play', () => isPlaying.value = true)
-    videoPlayer.value.removeEventListener('pause', () => isPlaying.value = false)
+    videoPlayer.value.removeEventListener('play', handlePlay)
+    videoPlayer.value.removeEventListener('pause', handlePause)
   }
 })
 </script>
