@@ -70,6 +70,7 @@
                     :enrollments="enrollments"
                     @enroll="enrollCourse"
                     @view="viewCourse"
+                    @cancel="cancelEnrollment"
                   />
                 </template>
                 <template v-else>
@@ -184,6 +185,7 @@ const props = defineProps({
 const toast = useToast()
 const localCourses = ref([...props.courses.data])
 const localDeletedCourses = ref(props.deletedCoursesData ? [...props.deletedCoursesData.data] : [])
+const localEnrollments = ref([...props.enrollments]) // إضافة reactive enrollments
 const activeTab = ref('active')
 
 // Computed properties
@@ -313,14 +315,50 @@ const enrollCourse = async (course) => {
     
     if (response.data.success) {
       toast.success(`Successfully enrolled in "${course.title}"!`)
-      // Update enrollment status locally
-      course.enrollment_status = 'active'
+      
+      // تحديث الـ enrollments محلياً - التحديث المباشر
+      localEnrollments.value.push({
+        id: response.data.enrollment.id,
+        course_id: course.id,
+        status: response.data.enrollment.status || 'active'
+      })
+      
+      // إعادة تحميل الصفحة بعد ثانيتين للتأكد من التحديث
+      setTimeout(() => {
+        window.location.reload()
+      }, 2000)
     }
   } catch (err) {
     if (err.response?.status === 422) {
       toast.error('You are already enrolled in this course.')
     } else {
       toast.error('Failed to enroll in course.')
+    }
+  }
+}
+
+const cancelEnrollment = async (course) => {
+  try {
+    const response = await axios.post(`/student/courses/${course.id}/cancel`, {}, {
+      headers: { 'X-CSRF-TOKEN': props.csrfToken }
+    })
+    
+    if (response.data.success) {
+      toast.success(`Enrollment cancelled for "${course.title}"!`)
+      
+      // تحديث الـ enrollments محلياً - إزالة ال enrollment
+      localEnrollments.value = localEnrollments.value.filter(e => e.course_id !== course.id)
+      
+      // إعادة تحميل الصفحة بعد ثانيتين للتأكد من التحديث
+      setTimeout(() => {
+        window.location.reload()
+      }, 2000)
+    }
+  } catch (err) {
+    if (err.response?.status === 404) {
+      toast.error('Enrollment not found.')
+    } else {
+      toast.error('Failed to cancel enrollment.')
     }
   }
 }
