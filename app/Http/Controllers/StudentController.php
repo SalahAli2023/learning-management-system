@@ -21,18 +21,11 @@ class StudentController extends Controller
     /**
      * Display the specified course for students
      */
-    public function show(Course $course,Enrollment $enrollment)
+    public function show(Course $course)
     {
-        $this->authorize('viewAny', Enrollment::class);
         // Check if student is enrolled or course is free
         $isEnrolled = auth()->user()->isEnrolledIn($course->id);
         $hasAccess = $isEnrolled || $course->is_free;
-
-        if (!$hasAccess) {
-            return view('student.show', compact('course', 'enrollment','isEnrolled'));
-            // redirect()->route('student.courses.show')
-            //     ->with('error', 'You need to enroll in this course to access its content.');
-        }
 
         $course->load([
             'instructor',
@@ -42,7 +35,9 @@ class StudentController extends Controller
                     ->orderBy('created_at');
             },
             'assignments' => function($query) {
-                // $query->whereNull('deleted_at');
+                $query->with(['submissions' => function($q) {
+                    $q->where('student_id', auth()->id());
+                }]);
             }
         ]);
 
@@ -56,11 +51,9 @@ class StudentController extends Controller
 
     public function play(Course $course,Lesson $lesson)
     {
-
-        $this->authorize('view', $lesson);
+        // $this->authorize('viewAny', $lesson);
 
         return view('student.lessons.show', compact('course', 'lesson'));
-
     }
 
     /**
@@ -117,5 +110,30 @@ class StudentController extends Controller
         $progress = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0;
 
         return view('student.courses.progress', compact('course', 'enrollment', 'progress'));
+    }
+
+    public function cancelEnrollment(Request $request, Course $course)
+    {
+        // $this->authorize('delete', Enrollment::class);
+
+        // البحث عن ال enrollment
+        $enrollment = Enrollment::where('student_id', $request->user()->id)
+            ->where('course_id', $course->id)
+            ->first();
+
+        if (!$enrollment) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Enrollment not found.'
+            ], 404);
+        }
+
+        // حذف ال enrollment
+        $enrollment->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Enrollment cancelled successfully!'
+        ]);
     }
 }
