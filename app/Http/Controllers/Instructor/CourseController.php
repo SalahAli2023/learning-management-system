@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\Enrollment;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreCourseRequest;
 use App\Http\Requests\UpdateCourseRequest;
@@ -22,14 +23,18 @@ class CourseController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Enrollment $enrollments)
     {
         $this->authorize('viewAny', Course::class);
 
-        // $courses = Course::paginate(10);
-        $courses = Course::whereNull('deleted_at')->paginate(10);
+         // جلب الكورسات مع instructor
+        $courses = Course::with('instructor')
+                ->whereNull('deleted_at')
+                ->paginate(10);
 
-        return view('instructor.courses.index', compact('courses'));
+        $enrollments = auth()->user()->enrollments()->get();
+
+        return view('instructor.courses.index', compact('courses', 'enrollments'));
     }
 
     /**

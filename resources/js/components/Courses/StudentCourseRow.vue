@@ -46,18 +46,26 @@
           <i class="fas fa-user-plus"></i>
         </button>
         
-        <!-- Enrolled Status - For enrolled students -->
-        <span v-else-if="isEnrolled && enrollmentStatus === 'active'"
+        <!-- Cancel Button - For enrolled students (active or pending) -->
+        <button v-else-if="isEnrolled && (enrollmentStatus === 'active' || enrollmentStatus === 'pending')"
+                @click="confirmCancel"
+                class="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-300 transform hover:scale-110 tooltip"
+                title="Cancel Enrollment">
+          <i class="fas fa-times-circle"></i>
+        </button>
+
+        <!-- Completed Status - For completed enrollment -->
+        <span v-else-if="isEnrolled && enrollmentStatus === 'completed'"
               class="p-2 bg-purple-500 text-white rounded-lg flex items-center gap-1 tooltip"
-              title="You are enrolled in this course">
-          <i class="fas fa-check-circle"></i>
+              title="Course Completed">
+          <i class="fas fa-graduation-cap"></i>
         </span>
 
-        <!-- Pending Status - For pending enrollment -->
-        <span v-else-if="isEnrolled && enrollmentStatus === 'pending'"
-              class="p-2 bg-yellow-500 text-white rounded-lg flex items-center gap-1 tooltip"
-              title="Enrollment pending approval">
-          <i class="fas fa-clock"></i>
+        <!-- Cancelled Status - For cancelled enrollment -->
+        <span v-else-if="isEnrolled && enrollmentStatus === 'cancelled'"
+              class="p-2 bg-gray-500 text-white rounded-lg flex items-center gap-1 tooltip"
+              title="Enrollment Cancelled">
+          <i class="fas fa-ban"></i>
         </span>
       </div>
     </td>
@@ -75,7 +83,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['enroll', 'view'])
+const emit = defineEmits(['enroll', 'view', 'cancel'])
 
 // Find enrollment for this course
 const courseEnrollment = computed(() => {
@@ -91,7 +99,7 @@ const enrollmentStatus = computed(() => {
 const enrollmentStatusText = computed(() => {
   const statusMap = {
     'not_enrolled': 'Not Enrolled',
-    'pending': 'Pending',
+    'pending': 'Pending Approval',
     'active': 'Enrolled',
     'completed': 'Completed',
     'cancelled': 'Cancelled'
@@ -120,6 +128,12 @@ const enrollmentStatusIcon = computed(() => {
   }
   return iconMap[enrollmentStatus.value] || 'fas fa-times-circle'
 })
+
+const confirmCancel = () => {
+  if (confirm('Are you sure you want to cancel your enrollment? This action cannot be undone.')) {
+    emit('cancel', props.course)
+  }
+}
 </script>
 
 <style scoped>

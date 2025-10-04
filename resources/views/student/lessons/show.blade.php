@@ -1,5 +1,5 @@
 <x-app-layout>
-    <lessons-show
+    <students-lesson-show
         :lesson="{{ $lesson->toJson() }}"
         :course="{{ $course->toJson() }}"
         index-route="{{ route('student.courses.show', $course->id) }}"
@@ -13,5 +13,5 @@
         :course-lessons="{{ $course->lessons->toJson() }}"
         :current-lesson-id="{{ $lesson->id }}"
         csrf-token="{{ csrf_token() }}"
-    ></lessons-show>
+    ></students-lesson-show>
 </x-app-layout>

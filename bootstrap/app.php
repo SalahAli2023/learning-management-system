@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             // existing middleware...
             'role' => \App\Http\Middleware\CheckRoleMiddleware::class,
-        
+            'check.enrollment' => \App\Http\Middleware\CheckEnrollment::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
