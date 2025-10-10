@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('type')->default('info');
             $table->enum('status', ['unread','read'])->default('unread');
             $table->json('data')->nullable();
+            $table->timestamp('read_at')->nullable();
             $table->timestamps();
         });
     }
